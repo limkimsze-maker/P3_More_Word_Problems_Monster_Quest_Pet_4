@@ -338,6 +338,11 @@
     }
     .rewardBtns{display:flex; gap:10px; width:100%; justify-content:center; flex-wrap:wrap;}
     .rewardBtns .btn{flex:0 0 auto; min-width:150px; font-size:16px; padding:10px 16px;}
+    .streakTag{
+      border:2px solid #f6c94c; border-radius:16px; padding:8px 14px;
+      font-size:14px; font-weight:1000; color:#8a4b00; background:#fff7d6;
+      white-space:nowrap; box-shadow:0 4px 10px rgba(245,158,11,.12);
+    }
 
     @media (max-width:1200px){
       .main{grid-template-columns:minmax(0,2.05fr) minmax(280px,.78fr)}
@@ -360,7 +365,10 @@
                     <div class="questionTitleMain">2-Step Word Problem</div>
                     <div class="questionTitleSub">Read carefully. Solve step by step.</div>
                   </div>
+                  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                   <div class="questionTag">New variation</div>
+                  <div class="streakTag" id="streakTag">Streak: 0 / 3</div>
+                </div>
                 </div>
                 <div class="problemText" id="problemText"></div>
                 <div class="opBank">
@@ -493,13 +501,13 @@
 
 <div class="rewardOverlay" id="rewardOverlay" aria-hidden="true">
   <div class="rewardCard" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
-    <div class="rewardTitle" id="rewardTitle">Reward Unlocked!</div>
+    <div class="rewardTitle" id="rewardTitle">Pet Unlocked!</div>
     <div class="rewardImageWrap">
       <img src="./4 pet(1).png" alt="Pet stage 4 reward image">
     </div>
     <div class="rewardText">It grows much larger wings.</div>
     <div class="rewardBtns">
-      <button class="btn primary" id="btnRewardNext" type="button">New Variation</button>
+      <button class="btn primary" id="btnRewardNext" type="button">Play Again</button>
       <button class="btn" id="btnRewardClose" type="button">Close</button>
     </div>
   </div>
@@ -560,6 +568,7 @@
     eq1Op: document.getElementById('eq1Op'),
     eq2Op: document.getElementById('eq2Op'),
     feedback: document.getElementById('feedback'),
+    streakTag: document.getElementById('streakTag'),
     rewardOverlay: document.getElementById('rewardOverlay'),
     btnRewardNext: document.getElementById('btnRewardNext'),
     btnRewardClose: document.getElementById('btnRewardClose'),
@@ -601,6 +610,8 @@
 
   let audioUnlocked = false;
   let state = null;
+  let streak = 0;
+  const targetStreak = 3;
 
   async function unlockAudio(){
     try{
@@ -686,6 +697,27 @@
     els.feedback.textContent = '';
   }
 
+  function updateStreakTag(){
+    if(!els.streakTag) return;
+    els.streakTag.textContent = `Streak: ${streak} / ${targetStreak}`;
+  }
+
+  function clearWorking(){
+    const canvas = document.getElementById('workCanvas');
+    if(!canvas) return;
+    const r = canvas.getBoundingClientRect();
+    ctx.clearRect(0,0,r.width,r.height);
+  }
+
+  function startFreshRun(){
+    streak = 0;
+    updateStreakTag();
+    hideReward();
+    state = makeVariation();
+    renderVariant();
+    clearWorking();
+  }
+
   function makeVariation(){
     while(true){
       const person = pick(people);
@@ -747,6 +779,7 @@
 
     resetInputs();
     hideReward();
+    updateStreakTag();
     fitToViewport();
   }
 
@@ -885,10 +918,10 @@
     }
   }
 
-  els.btnNew.addEventListener('click', ()=>{ state = makeVariation(); renderVariant(); });
+  els.btnNew.addEventListener('click', startFreshRun);
   els.btnCheck.addEventListener('click', check);
   els.btnRewardClose.addEventListener('click', hideReward);
-  els.btnRewardNext.addEventListener('click', ()=>{ hideReward(); state = makeVariation(); renderVariant(); });
+  els.btnRewardNext.addEventListener('click', startFreshRun);
   els.rewardOverlay.addEventListener('click', (e)=>{ if(e.target === els.rewardOverlay) hideReward(); });
 
   window.addEventListener('resize', ()=>{ fitToViewport(); resizeConfetti(); });
@@ -928,15 +961,11 @@
   canvas.addEventListener('touchstart', startDraw, {passive:false});
   canvas.addEventListener('touchmove', moveDraw, {passive:false});
   window.addEventListener('touchend', endDraw, {passive:false});
-  document.getElementById('btnWorkClearTop').addEventListener('click', ()=>{
-    const r = canvas.getBoundingClientRect();
-    ctx.clearRect(0,0,r.width,r.height);
-  });
+  document.getElementById('btnWorkClearTop').addEventListener('click', clearWorking);
   window.addEventListener('resize', resizeCanvas);
   setTimeout(()=>{ resizeCanvas(); fitToViewport(); resizeConfetti(); }, 50);
 
-  state = makeVariation();
-  renderVariant();
+  startFreshRun();
 })();
 </script>
 </body>
