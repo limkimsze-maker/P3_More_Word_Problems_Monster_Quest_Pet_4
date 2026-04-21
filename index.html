@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Two-Step Change Problem — Variants</title>
+
+  <link rel="icon" href="./kimsze_sharp16.ico?v=20260111a" sizes="any">
+  <link rel="shortcut icon" href="./kimsze_sharp16.ico?v=20260111a">
+
+  <script>
+  (function(){
+    const ACTIVITY_ID = 'https://limkimsze-maker.github.io/Two_Step_Change_Variants_Fixed_20260405/';
+    try{
+      const gone=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(!k) continue;
+        if(k===ACTIVITY_ID || k.startsWith(ACTIVITY_ID+'::') || k.startsWith('sls_scope::'+ACTIVITY_ID) || k.startsWith('UFCO-firstSubmit::'+ACTIVITY_ID) || k.startsWith('sls_unlike_payload::'+ACTIVITY_ID)) gone.push(k);
+      }
+      gone.forEach(k=>localStorage.removeItem(k));
+      sessionStorage.removeItem('UFCO-firstSubmit::'+ACTIVITY_ID);
+      sessionStorage.removeItem('UFCO-lastTs::'+ACTIVITY_ID);
+      try{
+        const bc=new BroadcastChannel('xapi-state');
+        bc.postMessage({type:'clear',activityId:ACTIVITY_ID,ts:Date.now()});
+        bc.close();
+      }catch(e){}
+    }catch(e){}
+    window.__ACTIVITY_ID__ = ACTIVITY_ID;
+  })();
+  </script>
+
+  <script async src="https://cdn.counter.dev/script.js" data-id="825e93b6-ce99-40ef-8bcc-125f13297433" data-utcoffset="8"></script>
+
+  <style>
+    :root{
+      --card:#ffffff;
+      --board:#dbe2f0;
+      --panel:#e7edf7;
+      --ink:#101828;
+      --muted:#5a6780;
+      --line:#182235;
+      --shadow:0 12px 28px rgba(15,23,42,.10);
+      --workspace:#ffffff;
+      --barTop:#a8cb33;
+      --barAdd:#f7af1c;
+      --barPaid:#efe36c;
+      --barChange:#c9a8d8;
+      --blank:#eef4c9;
+      --blankBorder:#8ea56c;
+      --eqBg:#d7eceb;
+      --good:#dff3e6;
+      --bad:#ffe2e2;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Comic Sans MS","Comic Neue","Trebuchet MS",system-ui,sans-serif;
+      color:var(--ink);
+      background:linear-gradient(180deg,#f7f8fb,#eef2f8);
+      overflow:hidden;
+    }
+
+    .app{height:100vh;display:flex;flex-direction:column}
+    .main{
+      flex:1; min-height:0; padding:8px;
+      display:grid; grid-template-columns:minmax(0,2.22fr) minmax(330px,.58fr); gap:10px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid rgba(16,24,40,.08);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      display:flex; flex-direction:column; min-height:0; overflow:hidden;
+    }
+    .cardHd{
+      flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px 16px; border-bottom:1px solid rgba(16,24,40,.08);
+      font-size:18px; font-weight:1000;
+    }
+
+    .leftBd{flex:1; min-height:0; position:relative; padding:6px; background:#d8dfed; overflow:hidden;}
+    .fitViewport{position:absolute; inset:6px; overflow:hidden;}
+    .fitStage{position:absolute; left:0; top:0; transform-origin:top left;}
+
+    .questionShell{
+      width:1220px; height:820px;
+      border-radius:30px;
+      background:#d3dbea;
+      padding:10px;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+      overflow:hidden;
+    }
+
+    .boardGrid{
+      width:100%; height:100%;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      grid-template-rows:210px 1fr;
+      grid-template-areas:
+        "intro intro"
+        "main main";
+      gap:12px;
+      min-height:0;
+      align-items:stretch;
+    }
+
+    .introPanel{grid-area:intro}
+    .mainPanel{grid-area:main}
+    .introPanel, .mainPanel{
+      border-radius:26px;
+      background:rgba(233,238,247,.74);
+      padding:14px 16px;
+      position:relative;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+      overflow:visible;
+    }
+
+    .questionTitleBox{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background:rgba(244,247,252,.95);
+      border-radius:18px;
+      padding:12px 16px;
+      margin-bottom:12px;
+    }
+    .questionTitleMain{font-size:24px; font-weight:1000; color:#2b6fb5}
+    .questionTitleSub{font-size:12px; font-weight:900; color:#64748b}
+    .questionTag{
+      border:2px solid #c6d8ef; border-radius:16px; padding:8px 14px;
+      font-size:12px; font-weight:1000; color:#2b6fb5; background:#f4f8fd;
+      white-space:nowrap;
+    }
+    .problemText{font-size:20px; line-height:1.24; font-weight:1000; padding:2px 4px 0;}
+    .problemText div{margin-bottom:2px}
+
+    .opBank{margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; position:relative; z-index:12;}
+    .opBankLabel{font-size:14px; font-weight:1000; color:var(--muted)}
+    .opChip{
+      width:38px; height:38px; border-radius:999px;
+      border:2px solid rgba(16,24,40,.18); background:#fff;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:20px; font-weight:1000; cursor:pointer; user-select:none;
+      box-shadow:0 5px 12px rgba(15,23,42,.06);
+    }
+    .opChip:active{transform:translateY(1px)}
+    .opSlot{
+      width:38px; height:38px; border-radius:999px;
+      border:3px dashed rgba(16,24,40,.25); background:#fff;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:20px; font-weight:1000; color:#536071;
+      cursor:pointer; flex:0 0 auto;
+    }
+    .opSlot.filled{border-style:solid; color:var(--ink)}
+
+    .mainInner{
+      height:100%;
+      display:grid;
+      grid-template-columns:610px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    .middleFrame{
+      height:100%;
+      border-radius:24px;
+      background:rgba(244,247,252,.70);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+      padding:16px 18px;
+      overflow:hidden;
+    }
+    .leftSolve{display:flex; flex-direction:column; gap:12px;}
+    .rightSolve{
+      min-height:100%;
+      border-radius:24px;
+      background:rgba(244,247,252,.82);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.38);
+      padding:10px 14px 10px;
+      display:flex; flex-direction:column; justify-content:flex-start; gap:8px;
+    }
+    .rightSolveHeader{font-size:18px; font-weight:1000; margin-bottom:2px;}
+    .rightSolvePrompt{font-size:18px; line-height:1.18; font-weight:1000; margin-bottom:2px;}
+    .rightSolveBottom{margin-top:auto; display:flex; flex-direction:column; gap:8px;}
+
+    .partHeader{font-size:24px; font-weight:1000; margin:0 0 4px 0;}
+    .modelWrap{
+      position:relative; width:100%; overflow:hidden;
+    }
+
+    .fixedTag{
+      min-width:72px; height:34px; border-radius:10px;
+      border:2px solid var(--blankBorder); background:var(--blank);
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:0 10px; font-size:16px; font-weight:1000; color:#13212f;
+    }
+    .moneyLead{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:14px; font-size:20px; font-weight:1000; line-height:1;
+    }
+
+    .model1{height:190px;}
+    .model2{height:150px;}
+
+    .moneyLabel{
+      position:absolute; transform:translateX(-50%);
+      display:flex; align-items:center; gap:3px;
+      font-size:18px; font-weight:1000;
+    }
+
+    .braceTop, .braceBottom, .braceBottom2{
+      position:absolute; overflow:visible;
+    }
+    .braceTop svg, .braceBottom svg, .braceBottom2 svg{
+      width:100%; height:100%; display:block;
+    }
+    .braceTop path, .braceBottom path, .braceBottom2 path{
+      fill:none; stroke:var(--line); stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round;
+    }
+
+    .bar{
+      position:absolute; left:130px; height:38px; border:3px solid var(--line); background:#fff;
+      display:flex;
+    }
+    .segBase,.segAdd,.segPaid,.segChange{height:100%}
+    .segBase{background:var(--barTop)}
+    .segAdd{background:var(--barAdd)}
+    .segPaid{background:var(--barPaid)}
+    .segChange{background:var(--barChange)}
+
+    .vDash{
+      position:absolute; border-left:3px dashed var(--line);
+    }
+
+    .eqBox{
+      background:var(--eqBg); border-radius:16px; padding:10px 14px;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      font-size:22px; font-weight:1000; flex-wrap:nowrap;
+    }
+    .blankInput{
+      width:82px; height:38px; border-radius:11px;
+      border:2px solid var(--blankBorder); background:var(--blank);
+      font:inherit; font-size:17px; font-weight:1000; text-align:center; color:#13212f; outline:none;
+      padding:0 8px;
+    }
+    .blankInput.long{width:108px}
+    .moneyField{display:inline-flex; align-items:center; justify-content:center; gap:4px;}
+    .moneyField .dollar{font-size:22px; font-weight:1000; min-width:14px; text-align:center;}
+    .sentence{font-size:22px; font-weight:1000; line-height:1.26;}
+    .moneyInlineSentence{display:inline-flex; align-items:center; gap:4px; vertical-align:middle;}
+
+    .rightSolve .eqBox{padding:8px 10px; gap:6px; font-size:18px;}
+    .rightSolve .blankInput{width:72px; height:34px; font-size:15px; padding:0 6px;}
+    .rightSolve .blankInput.long{width:92px;}
+    .rightSolve .moneyField .dollar{font-size:18px; min-width:12px;}
+    .rightSolve .sentence{font-size:18px; line-height:1.16;}
+    .rightSolve .controlsFrame{margin-top:2px;}
+    .rightSolve .controlsFrameInner{padding:6px 8px; gap:6px;}
+    .rightSolve .btn{padding:6px 8px; font-size:12px; min-width:74px;}
+.controlsFrame{display:flex; align-items:start; justify-content:center; position:relative; z-index:5; margin-top:6px;}
+    .controlsFrameInner{
+      width:100%;
+      border-radius:22px;
+      border:1px solid rgba(16,24,40,.10);
+      background:rgba(244,247,252,.96);
+      box-shadow:0 8px 18px rgba(15,23,42,.06);
+      padding:8px 12px;
+      display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:nowrap;
+    }
+    .btn{
+      border:1px solid rgba(16,24,40,.12); background:#fff; color:#111827;
+      padding:7px 10px; border-radius:16px; font:inherit; font-size:12px; font-weight:1000; cursor:pointer;
+      box-shadow:0 4px 12px rgba(15,23,42,.04);
+      min-width:84px; white-space:nowrap; flex:1 1 0;
+    }
+    .btn.primary{background:#0c1630; color:#fff; border-color:#0c1630}
+    .btn.checkYellow{background:#f5c84d; color:#111827; border-color:#e0b22e}
+    .btn:active{transform:translateY(1px)}
+
+    #workPanelBd{flex:1; min-height:0; padding:0; overflow:hidden; display:flex; flex-direction:column}
+    .workCard{flex:1; display:flex; min-height:0; flex-direction:column}
+    .workCanvasWrap{flex:1; min-height:0; padding:0}
+    #workCanvas{width:100%; height:100%; display:block; background:#fff; touch-action:none}
+    .workFeedbackFrame{
+      flex:0 0 170px; min-height:170px;
+      border-top:1px solid rgba(16,24,40,.08);
+      background:rgba(244,247,252,.96);
+      padding:12px;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .workFeedbackTitle{font-size:16px; font-weight:1000; color:#111827}
+    .feedback{
+      position:static; min-height:58px; width:100%;
+      margin:0; border-radius:16px; padding:10px 14px;
+      font-size:15px; line-height:1.3; font-weight:1000; display:none;
+      white-space:pre-line; overflow:auto;
+      background:#fff; border:1px solid rgba(16,24,40,.10);
+    }
+    .feedback.good{display:block; background:var(--good); border-color:#b1d7be}
+    .feedback.bad{display:block; background:var(--bad); border-color:#efb8b8}
+
+    .footer{
+      flex:0 0 auto; padding:8px 14px; border-top:1px solid rgba(16,24,40,.08);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      font-size:11px; font-weight:1000; color:var(--muted)
+    }
+    #confettiCanvas{position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:9999;}
+
+
+
+    .rewardOverlay{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(15,23,42,.58); z-index:10020; padding:20px;
+    }
+    .rewardOverlay.show{display:flex;}
+    .rewardCard{
+      width:min(92vw, 760px);
+      background:linear-gradient(180deg,#fff8fe,#f6f7ff);
+      border-radius:32px;
+      box-shadow:0 24px 60px rgba(15,23,42,.28);
+      border:4px solid #ffffff;
+      padding:20px 20px 18px;
+      display:flex; flex-direction:column; align-items:center; gap:14px;
+      text-align:center;
+    }
+    .rewardTitle{
+      font-size:34px; font-weight:1000; color:#7c3aed; line-height:1.05;
+      text-shadow:0 2px 0 rgba(255,255,255,.7);
+    }
+    .rewardImageWrap{
+      width:min(78vw, 300px); aspect-ratio:1 / 1; border-radius:28px; overflow:hidden;
+      background:#efe9ff; border:4px solid #fff; box-shadow:0 10px 28px rgba(124,58,237,.22);
+    }
+    .rewardImageWrap img{width:100%; height:100%; object-fit:cover; display:block;}
+    .rewardText{
+      font-size:32px; font-weight:1000; color:#0f172a; line-height:1.14;
+      max-width:640px;
+    }
+    .rewardBtns{display:flex; gap:10px; width:100%; justify-content:center; flex-wrap:wrap;}
+    .rewardBtns .btn{flex:0 0 auto; min-width:150px; font-size:16px; padding:10px 16px;}
+
+    @media (max-width:1200px){
+      .main{grid-template-columns:minmax(0,2.05fr) minmax(280px,.78fr)}
+      .questionShell{width:1160px; height:780px}
+      .mainInner{grid-template-columns:590px 1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="main">
+    <div class="card">
+      <div class="leftBd">
+        <div class="fitViewport" id="fitViewport"><div class="fitStage" id="fitStage">
+          <div class="questionShell" id="questionShell">
+            <div class="boardGrid">
+              <div class="introPanel">
+                <div class="questionTitleBox">
+                  <div>
+                    <div class="questionTitleMain">2-Step Word Problem</div>
+                    <div class="questionTitleSub">Read carefully. Solve step by step.</div>
+                  </div>
+                  <div class="questionTag">New variation</div>
+                </div>
+                <div class="problemText" id="problemText"></div>
+                <div class="opBank">
+                  <span class="opBankLabel">Click the operation sign:</span>
+                  <span class="opChip" data-op="+">+</span>
+                  <span class="opChip" data-op="−">−</span>
+                  <span class="opChip" data-op="×">×</span>
+                  <span class="opChip" data-op="÷">÷</span>
+                </div>
+              </div>
+
+              <div class="mainPanel">
+                <div class="middleFrame">
+                  <div class="mainInner">
+                    <div class="leftSolve">
+                      <div class="partHeader">(i)</div>
+                      <div class="modelWrap model1">
+                        <div class="moneyLabel" id="m1BaseLabel"><span class="moneyLead">$</span><input class="blankInput small" id="m1Base" inputmode="decimal" placeholder="0.00" aria-label="Model 1 base price"></div>
+                        <div class="moneyLabel" id="m1AddLabel"><span class="moneyLead">$</span><input class="blankInput small" id="m1Add" inputmode="decimal" placeholder="0.00" aria-label="Model 1 additional amount"></div>
+                        <div class="moneyLabel" id="m1TotalLabel"><span class="moneyLead">$</span><input class="blankInput long" id="m1Total" inputmode="decimal" placeholder="0.00" aria-label="Model 1 total"></div>
+
+                        <div class="braceTop" id="m1BraceBase"></div>
+                        <div class="braceTop" id="m1BraceAdd"></div>
+                        <div class="braceBottom" id="m1BraceWhole"></div>
+
+                        <div class="bar" id="m1Bar">
+                          <div class="segBase" id="m1SegBase"></div>
+                          <div class="segAdd" id="m1SegAdd"></div>
+                        </div>
+                      </div>
+
+                      <div class="eqBox">
+                        <span class="moneyField"><span class="dollar">$</span><input class="blankInput" id="eq1a" inputmode="decimal" placeholder="0.00" aria-label="First equation first value"></span>
+                        <span class="opSlot" id="eq1Op">?</span>
+                        <span class="moneyField"><span class="dollar">$</span><input class="blankInput" id="eq1b" inputmode="decimal" placeholder="0.00" aria-label="First equation second value"></span>
+                        <span>=</span>
+                        <span class="moneyField"><span class="dollar">$</span><input class="blankInput long" id="eq1ans" inputmode="decimal" placeholder="0.00" aria-label="First equation answer"></span>
+                      </div>
+                      <div class="sentence">
+                        <span id="nameSentence1">Aiden</span> paid
+                        <span class="moneyInlineSentence"><span class="moneyLead">$</span><input class="blankInput long" id="totalSentence1" inputmode="decimal" placeholder="0.00" aria-label="Total paid sentence answer"></span>
+                        in total for the purchase.
+                      </div>
+                    </div>
+
+                    <div class="rightSolve">
+                      <div class="partHeader">(ii)</div>
+                      <div class="rightSolvePrompt">
+                        How much change did <span id="namePrompt2">Aiden</span> get?
+                      </div>
+
+                      <div class="modelWrap model2">
+                        <div class="moneyLabel" id="m2PaidWholeLabel"><span class="moneyLead">$</span><input class="blankInput long" id="m2PaidWhole" inputmode="decimal" placeholder="0.00" aria-label="Model 2 whole note"></div>
+                        <div class="moneyLabel" id="m2PaidPartLabel"><span class="moneyLead">$</span><input class="blankInput long" id="m2PaidPart" inputmode="decimal" placeholder="0.00" aria-label="Model 2 paid part"></div>
+                        <div class="moneyLabel" id="m2ChangeLabel"><span class="moneyLead">$</span><input class="blankInput long" id="m2Change" inputmode="decimal" placeholder="0.00" aria-label="Model 2 change part"></div>
+
+                        <div class="braceTop" id="m2BraceWhole"></div>
+                        <div class="braceBottom" id="m2BracePaid"></div>
+                        <div class="braceBottom2" id="m2BraceChange"></div>
+
+                        <div class="bar" id="m2Bar">
+                          <div class="segPaid" id="m2SegPaid"></div>
+                          <div class="segChange" id="m2SegChange"></div>
+                        </div>
+
+                        <div class="vDash" id="m2DashPaid"></div>
+                        <div class="vDash" id="m2DashWhole"></div>
+                      </div>
+
+                      <div class="rightSolveBottom">
+                        <div>
+                          <div class="eqBox">
+                            <span class="moneyField"><span class="dollar">$</span><input class="blankInput" id="eq2a" inputmode="decimal" placeholder="0.00" aria-label="Second equation first value"></span>
+                            <span class="opSlot" id="eq2Op">?</span>
+                            <span class="moneyField"><span class="dollar">$</span><input class="blankInput" id="eq2b" inputmode="decimal" placeholder="0.00" aria-label="Second equation second value"></span>
+                            <span>=</span>
+                            <span class="moneyField"><span class="dollar">$</span><input class="blankInput long" id="eq2ans" inputmode="decimal" placeholder="0.00" aria-label="Second equation answer"></span>
+                          </div>
+                          <div class="sentence">
+                            <span id="pronoun2">He</span> got
+                            <span class="moneyInlineSentence"><span class="moneyLead">$</span><input class="blankInput long" id="changeSentence" inputmode="decimal" placeholder="0.00" aria-label="Change sentence answer"></span>
+                            in change.
+                          </div>
+                        </div>
+
+                        <div class="controlsFrame">
+                          <div class="controlsFrameInner">
+                            <button class="btn primary" id="btnUnlock" type="button">🔊 Unlock Audio</button>
+                            <button class="btn" id="btnNew" type="button">New Variation</button>
+                            <button class="btn checkYellow" id="btnCheck" type="button">Check Answers</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card" id="toolsCard">
+      <div class="cardHd">
+        <div class="h">Working Space</div>
+        <button class="btn" id="btnWorkClearTop" type="button">Clear Working</button>
+      </div>
+      <div id="workPanelBd">
+        <div class="workCard">
+          <div class="workCanvasWrap">
+            <canvas id="workCanvas"></canvas>
+          </div>
+          <div class="workFeedbackFrame">
+            <div class="workFeedbackTitle">Feedback</div>
+            <div class="feedback" id="feedback"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Designed by Lim Kim Sze © 2026</div>
+    <div>Two-step word problem layout with right-side working space</div>
+  </div>
+</div>
+
+
+<div class="rewardOverlay" id="rewardOverlay" aria-hidden="true">
+  <div class="rewardCard" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+    <div class="rewardTitle" id="rewardTitle">Reward Unlocked!</div>
+    <div class="rewardImageWrap">
+      <img src="./4 pet(1).png" alt="Pet stage 4 reward image">
+    </div>
+    <div class="rewardText">It grows much larger wings.</div>
+    <div class="rewardBtns">
+      <button class="btn primary" id="btnRewardNext" type="button">New Variation</button>
+      <button class="btn" id="btnRewardClose" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+
+<script>
+(function(){
+  'use strict';
+
+  const people = [
+    {name:'Aiden', pronoun:'He'},
+    {name:'Mia', pronoun:'She'},
+    {name:'Grace', pronoun:'She'},
+    {name:'Daniel', pronoun:'He'},
+    {name:'Amir', pronoun:'He'},
+    {name:'Siti', pronoun:'She'},
+    {name:'Jayden', pronoun:'He'},
+    {name:'Sarah', pronoun:'She'},
+    {name:'Ethan', pronoun:'He'},
+    {name:'Hana', pronoun:'She'},
+    {name:'Zavier', pronoun:'He'}
+  ];
+  const bundles = [
+    'stationery pack','toy bundle','gift pack','art set','reading kit','game set',
+    'craft pack','snack box','activity set','school set'
+  ];
+  const extras = [
+    'add a gift wrap','add stickers','add a bookmark','add an eraser',
+    'add a ruler','add a badge','add a small toy','add a keychain'
+  ];
+  const paidNotes = [1000, 2000];
+
+  const els = {
+    problemText: document.getElementById('problemText'),
+    nameSentence1: document.getElementById('nameSentence1'),
+    namePrompt2: document.getElementById('namePrompt2'),
+    pronoun2: document.getElementById('pronoun2'),
+
+    m1Base: document.getElementById('m1Base'),
+    m1Add: document.getElementById('m1Add'),
+    m1Total: document.getElementById('m1Total'),
+    eq1a: document.getElementById('eq1a'),
+    eq1b: document.getElementById('eq1b'),
+    eq1ans: document.getElementById('eq1ans'),
+    totalSentence1: document.getElementById('totalSentence1'),
+
+    m2PaidWhole: document.getElementById('m2PaidWhole'),
+    m2PaidPart: document.getElementById('m2PaidPart'),
+    m2Change: document.getElementById('m2Change'),
+    eq2a: document.getElementById('eq2a'),
+    eq2b: document.getElementById('eq2b'),
+    eq2ans: document.getElementById('eq2ans'),
+    changeSentence: document.getElementById('changeSentence'),
+
+    eq1Op: document.getElementById('eq1Op'),
+    eq2Op: document.getElementById('eq2Op'),
+    feedback: document.getElementById('feedback'),
+    rewardOverlay: document.getElementById('rewardOverlay'),
+    btnRewardNext: document.getElementById('btnRewardNext'),
+    btnRewardClose: document.getElementById('btnRewardClose'),
+    btnCheck: document.getElementById('btnCheck'),
+    btnNew: document.getElementById('btnNew'),
+    btnUnlock: document.getElementById('btnUnlock'),
+    fitViewport: document.getElementById('fitViewport'),
+    fitStage: document.getElementById('fitStage'),
+    questionShell: document.getElementById('questionShell'),
+
+    m1BaseLabel: document.getElementById('m1BaseLabel'),
+    m1AddLabel: document.getElementById('m1AddLabel'),
+    m1TotalLabel: document.getElementById('m1TotalLabel'),
+    m1BraceBase: document.getElementById('m1BraceBase'),
+    m1BraceAdd: document.getElementById('m1BraceAdd'),
+    m1BraceWhole: document.getElementById('m1BraceWhole'),
+    m1Bar: document.getElementById('m1Bar'),
+    m1SegBase: document.getElementById('m1SegBase'),
+    m1SegAdd: document.getElementById('m1SegAdd'),
+
+    m2PaidWholeLabel: document.getElementById('m2PaidWholeLabel'),
+    m2PaidPartLabel: document.getElementById('m2PaidPartLabel'),
+    m2ChangeLabel: document.getElementById('m2ChangeLabel'),
+    m2BraceWhole: document.getElementById('m2BraceWhole'),
+    m2BracePaid: document.getElementById('m2BracePaid'),
+    m2BraceChange: document.getElementById('m2BraceChange'),
+    m2Bar: document.getElementById('m2Bar'),
+    m2SegPaid: document.getElementById('m2SegPaid'),
+    m2SegChange: document.getElementById('m2SegChange'),
+    m2DashPaid: document.getElementById('m2DashPaid'),
+    m2DashWhole: document.getElementById('m2DashWhole')
+  };
+
+  const sounds = {
+    ok: new Audio('./correct.mp3'),
+    bad: new Audio('./wrong.mp3')
+  };
+  Object.values(sounds).forEach(a=>{ a.preload='auto'; a.playsInline=true; });
+
+  let audioUnlocked = false;
+  let state = null;
+
+  async function unlockAudio(){
+    try{
+      for(const a of Object.values(sounds)){
+        a.muted = true;
+        try{ await a.play(); }catch(e){}
+        a.pause(); a.currentTime = 0; a.muted = false;
+      }
+      audioUnlocked = true;
+      els.btnUnlock.textContent = '🔊 Audio Unlocked';
+    }catch(e){}
+  }
+  function play(name){
+    const a = sounds[name]; if(!a) return;
+    try{ a.pause(); a.currentTime=0; a.play().catch(()=>{}); }catch(e){}
+  }
+  els.btnUnlock.addEventListener('click', unlockAudio);
+  window.addEventListener('pointerdown', ()=>{ if(!audioUnlocked) unlockAudio(); }, {once:true, passive:true});
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function money(cents){ return (cents/100).toFixed(2); }
+  function noteText(cents){ return cents % 100 === 0 ? String(cents/100) : money(cents); }
+  function parseMoney(v){
+    const s = String(v||'').trim().replace(/\$/g,'');
+    if(!s) return NaN;
+    if(!/^\d+\.\d{2}$/.test(s)) return NaN;
+    return Math.round(parseFloat(s)*100);
+  }
+
+  function parseNoteMoney(v){
+    const s = String(v||'').trim().replace(/\$/g,'');
+    if(!s) return NaN;
+    if(!/^\d+(?:\.00)?$/.test(s)) return NaN;
+    return Math.round(parseFloat(s)*100);
+  }
+
+  function setStylePx(el, styles){
+    Object.entries(styles).forEach(([k,v])=>{ el.style[k] = typeof v === 'number' ? `${v}px` : v; });
+  }
+
+  function braceTopSVG(){
+    return `<svg viewBox="0 0 100 24" preserveAspectRatio="none"><path d="M1 20 C1 8 4 4 12 4 L45 4 C47 4 48.6 4 50 1 C51.4 4 53 4 55 4 L88 4 C96 4 99 8 99 20"/></svg>`;
+  }
+  function braceBottomSVG(){
+    return `<svg viewBox="0 0 100 24" preserveAspectRatio="none"><path d="M1 4 C1 16 4 20 12 20 L45 20 C47 20 48.6 20 50 23 C51.4 20 53 20 55 20 L88 20 C96 20 99 16 99 4"/></svg>`;
+  }
+  els.m1BraceBase.innerHTML = braceTopSVG();
+  els.m1BraceAdd.innerHTML = braceTopSVG();
+  els.m1BraceWhole.innerHTML = braceBottomSVG();
+  els.m2BraceWhole.innerHTML = braceTopSVG();
+  els.m2BracePaid.innerHTML = braceBottomSVG();
+  els.m2BraceChange.innerHTML = braceBottomSVG();
+
+  const opState = { one:'', two:'' };
+  function setOp(which, symbol){
+    opState[which] = symbol;
+    const el = which==='one' ? els.eq1Op : els.eq2Op;
+    el.textContent = symbol;
+    el.classList.add('filled');
+  }
+  function clearOp(which){
+    opState[which] = '';
+    const el = which==='one' ? els.eq1Op : els.eq2Op;
+    el.textContent = '?';
+    el.classList.remove('filled');
+  }
+  els.eq1Op.addEventListener('click', ()=>clearOp('one'));
+  els.eq2Op.addEventListener('click', ()=>clearOp('two'));
+  document.querySelectorAll('.opChip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const op = chip.dataset.op;
+      if(!opState.one) setOp('one', op);
+      else if(!opState.two) setOp('two', op);
+      else setOp('two', op);
+    });
+  });
+
+  function resetInputs(){
+    ['m1Base','m1Add','m1Total','eq1a','eq1b','eq1ans','totalSentence1','m2PaidWhole','m2PaidPart','m2Change','eq2a','eq2b','eq2ans','changeSentence'].forEach(id=>els[id].value='');
+    clearOp('one');
+    clearOp('two');
+    els.feedback.className = 'feedback';
+    els.feedback.textContent = '';
+  }
+
+  function makeVariation(){
+    while(true){
+      const person = pick(people);
+      const bundle = pick(bundles);
+      const extra = pick(extras);
+      const paid = pick(paidNotes);
+      const base = (Math.floor(Math.random()*66)+90) * 5; // $4.50 to $7.75
+      const add = (Math.floor(Math.random()*16)+8) * 5;   // $0.40 to $1.15
+      const total = base + add;
+      const change = paid - total;
+      if(total < paid && change >= 120 && change <= 950){
+        return {person, bundle, extra, paid, base, add, total, change};
+      }
+    }
+  }
+
+  function renderVariant(){
+    els.problemText.innerHTML = `
+      <div>${state.person.name} bought a ${state.bundle} that cost $${money(state.base)}.</div>
+      <div>${state.person.pronoun} paid an additional $${money(state.add)} to ${state.extra}.</div>
+      <div>${state.person.pronoun} gave the cashier a $${noteText(state.paid)} note.</div>
+      <div>How much change did ${state.person.pronoun.toLowerCase()} get?</div>
+    `;
+    els.nameSentence1.textContent = state.person.name;
+    els.namePrompt2.textContent = state.person.name;
+    els.pronoun2.textContent = state.person.pronoun;
+
+    const MODEL1_LEFT = 130;
+    const MODEL1_W = 360;
+    const m1BaseW = Math.round((state.base / state.total) * MODEL1_W);
+    const m1AddW = MODEL1_W - m1BaseW;
+
+    const MODEL2_LEFT = 105;
+    const MODEL2_W = 345;
+    const m2PaidW = Math.round((state.total / state.paid) * MODEL2_W);
+    const m2ChangeW = MODEL2_W - m2PaidW;
+
+    setStylePx(els.m1BaseLabel, { left: MODEL1_LEFT + m1BaseW/2, top: 4 });
+    setStylePx(els.m1AddLabel, { left: MODEL1_LEFT + m1BaseW + m1AddW/2, top: 4 });
+    setStylePx(els.m1BraceBase, { left: MODEL1_LEFT, top: 42, width: m1BaseW, height: 28 });
+    setStylePx(els.m1BraceAdd, { left: MODEL1_LEFT + m1BaseW, top: 42, width: m1AddW, height: 28 });
+    setStylePx(els.m1Bar, { left: MODEL1_LEFT, top: 82, width: MODEL1_W });
+    setStylePx(els.m1SegBase, { width: m1BaseW });
+    setStylePx(els.m1SegAdd, { width: m1AddW });
+    setStylePx(els.m1BraceWhole, { left: MODEL1_LEFT, top: 122, width: MODEL1_W, height: 28 });
+    setStylePx(els.m1TotalLabel, { left: MODEL1_LEFT + MODEL1_W/2, top: 150 });
+
+    setStylePx(els.m2PaidWholeLabel, { left: MODEL2_LEFT + MODEL2_W/2, top: 0 });
+    setStylePx(els.m2BraceWhole, { left: MODEL2_LEFT, top: 30, width: MODEL2_W, height: 24 });
+    setStylePx(els.m2Bar, { left: MODEL2_LEFT, top: 64, width: MODEL2_W, height: 34 });
+    setStylePx(els.m2SegPaid, { width: m2PaidW });
+    setStylePx(els.m2SegChange, { width: m2ChangeW });
+    setStylePx(els.m2BracePaid, { left: MODEL2_LEFT, top: 98, width: m2PaidW, height: 24 });
+    setStylePx(els.m2BraceChange, { left: MODEL2_LEFT + m2PaidW, top: 98, width: m2ChangeW, height: 24 });
+    setStylePx(els.m2PaidPartLabel, { left: MODEL2_LEFT + m2PaidW/2, top: 114 });
+    setStylePx(els.m2ChangeLabel, { left: MODEL2_LEFT + m2PaidW + m2ChangeW/2, top: 114 });
+    setStylePx(els.m2DashPaid, { left: MODEL2_LEFT + m2PaidW, top: 64, height: 34 });
+    setStylePx(els.m2DashWhole, { left: MODEL2_LEFT + MODEL2_W, top: 64, height: 34 });
+
+    resetInputs();
+    hideReward();
+    fitToViewport();
+  }
+
+  function fitToViewport(){
+    const vp = els.fitViewport;
+    const stage = els.fitStage;
+    const shell = els.questionShell;
+    if(!vp || !stage || !shell) return;
+    const vw = vp.clientWidth;
+    const vh = vp.clientHeight;
+    const sw = shell.offsetWidth;
+    const sh = shell.offsetHeight;
+    const scale = Math.min(vw/sw, vh/sh);
+    stage.style.transform = `scale(${scale})`;
+    stage.style.left = Math.max(0, (vw - sw*scale)/2) + 'px';
+    stage.style.top = Math.max(0, (vh - sh*scale)/2) + 'px';
+  }
+
+
+
+  function hideReward(){
+    els.rewardOverlay.classList.remove('show');
+    els.rewardOverlay.setAttribute('aria-hidden', 'true');
+  }
+  function showReward(){
+    els.rewardOverlay.classList.add('show');
+    els.rewardOverlay.setAttribute('aria-hidden', 'false');
+  }
+
+  const confetti = {
+    canvas: document.getElementById('confettiCanvas'),
+    ctx: null, w: 0, h: 0, parts: [], until: 0, raf: 0
+  };
+  if(confetti.canvas) confetti.ctx = confetti.canvas.getContext('2d');
+  function resizeConfetti(){
+    if(!confetti.canvas || !confetti.ctx) return;
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    confetti.w = Math.floor(window.innerWidth * dpr);
+    confetti.h = Math.floor(window.innerHeight * dpr);
+    confetti.canvas.width = confetti.w;
+    confetti.canvas.height = confetti.h;
+    confetti.canvas.style.width = '100vw';
+    confetti.canvas.style.height = '100vh';
+  }
+  function fireConfetti(){
+    if(!confetti.canvas || !confetti.ctx) return;
+    resizeConfetti();
+    const now = performance.now();
+    confetti.until = now + 1600;
+    for(let i=0;i<160;i++){
+      const size = 6 + Math.random()*8;
+      confetti.parts.push({
+        x: confetti.w * (0.12 + Math.random()*0.76),
+        y: confetti.h * (0.02 + Math.random()*0.16),
+        vx: (Math.random()*2 - 1) * 6,
+        vy: -2 - Math.random()*5,
+        g: 0.18 + Math.random()*0.2,
+        r: size, rot: Math.random()*Math.PI, vr: (Math.random()*2 - 1) * 0.2, life: 0
+      });
+    }
+    if(confetti.raf) return;
+    const step = (t)=>{
+      const ctx = confetti.ctx;
+      ctx.clearRect(0,0,confetti.w,confetti.h);
+      confetti.parts = confetti.parts.filter(p => p.y < confetti.h + 200 && p.life < 260);
+      for(const p of confetti.parts){
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life += 1;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        const hue = (p.life*7 + (p.x+p.y)*0.002) % 360;
+        ctx.fillStyle = `hsl(${hue} 95% 60%)`;
+        ctx.fillRect(-p.r/2, -p.r/4, p.r, p.r/2);
+        ctx.restore();
+      }
+      if(t < confetti.until || confetti.parts.length){
+        confetti.raf = requestAnimationFrame(step);
+      }else{
+        cancelAnimationFrame(confetti.raf);
+        confetti.raf = 0;
+        ctx.clearRect(0,0,confetti.w,confetti.h);
+      }
+    };
+    confetti.raf = requestAnimationFrame(step);
+  }
+
+  function showFeedback(text, ok){
+    els.feedback.className = 'feedback ' + (ok ? 'good' : 'bad');
+    els.feedback.textContent = text;
+  }
+
+  function check(){
+    const m1Base = parseMoney(els.m1Base.value);
+    const m1Add = parseMoney(els.m1Add.value);
+    const m1Total = parseMoney(els.m1Total.value);
+    const eq1a = parseMoney(els.eq1a.value);
+    const eq1b = parseMoney(els.eq1b.value);
+    const eq1ans = parseMoney(els.eq1ans.value);
+    const totalSentence1 = parseMoney(els.totalSentence1.value);
+
+    const m2PaidWhole = parseNoteMoney(els.m2PaidWhole.value);
+    const m2PaidPart = parseMoney(els.m2PaidPart.value);
+    const m2Change = parseMoney(els.m2Change.value);
+    const eq2a = parseNoteMoney(els.eq2a.value);
+    const eq2b = parseMoney(els.eq2b.value);
+    const eq2ans = parseMoney(els.eq2ans.value);
+    const changeSentence = parseMoney(els.changeSentence.value);
+
+    const firstAddCommutes =
+      m1Base === state.base &&
+      m1Add === state.add &&
+      m1Total === state.total &&
+      ((eq1a === state.base && eq1b === state.add) || (eq1a === state.add && eq1b === state.base)) &&
+      opState.one === '+' &&
+      eq1ans === state.total &&
+      totalSentence1 === state.total;
+
+    const secondSubtraction =
+      m2PaidWhole === state.paid &&
+      m2PaidPart === state.total &&
+      m2Change === state.change &&
+      eq2a === state.paid &&
+      opState.two === '−' &&
+      eq2b === state.total &&
+      eq2ans === state.change &&
+      changeSentence === state.change;
+
+    const ok = firstAddCommutes && secondSubtraction;
+
+    if(ok){
+      if(audioUnlocked) play('ok');
+      fireConfetti();
+      showFeedback(`Well done! ${state.person.name} paid $${money(state.total)} in total.\n${state.person.pronoun} got $${money(state.change)} in change.`, true);
+      showReward();
+    }else{
+      if(audioUnlocked) play('bad');
+      showFeedback(`Check again.\nPart (i): $${money(state.base)} + $${money(state.add)} = $${money(state.total)}.\nPart (ii): $${noteText(state.paid)} − $${money(state.total)} = $${money(state.change)}.`, false);
+    }
+  }
+
+  els.btnNew.addEventListener('click', ()=>{ state = makeVariation(); renderVariant(); });
+  els.btnCheck.addEventListener('click', check);
+  els.btnRewardClose.addEventListener('click', hideReward);
+  els.btnRewardNext.addEventListener('click', ()=>{ hideReward(); state = makeVariation(); renderVariant(); });
+  els.rewardOverlay.addEventListener('click', (e)=>{ if(e.target === els.rewardOverlay) hideReward(); });
+
+  window.addEventListener('resize', ()=>{ fitToViewport(); resizeConfetti(); });
+  window.addEventListener('load', ()=>{ fitToViewport(); resizeConfetti(); });
+
+  const canvas = document.getElementById('workCanvas');
+  const ctx = canvas.getContext('2d');
+  let drawing = false, last = null;
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+    const snapshot = document.createElement('canvas');
+    snapshot.width = canvas.width || 1;
+    snapshot.height = canvas.height || 1;
+    const sctx = snapshot.getContext('2d');
+    if(canvas.width && canvas.height) sctx.drawImage(canvas,0,0);
+    canvas.width = Math.max(1, Math.round(rect.width*dpr));
+    canvas.height = Math.max(1, Math.round(rect.height*dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=4; ctx.strokeStyle='#0f172a';
+    ctx.clearRect(0,0,rect.width,rect.height);
+    if(snapshot.width>1 && snapshot.height>1){
+      ctx.drawImage(snapshot,0,0,rect.width,rect.height);
+    }
+  }
+  function point(e){
+    const r = canvas.getBoundingClientRect();
+    if(e.touches && e.touches[0]) return {x:e.touches[0].clientX-r.left, y:e.touches[0].clientY-r.top};
+    return {x:e.clientX-r.left, y:e.clientY-r.top};
+  }
+  function startDraw(e){ drawing=true; last=point(e); e.preventDefault(); }
+  function moveDraw(e){ if(!drawing) return; const p=point(e); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last=p; e.preventDefault(); }
+  function endDraw(){ drawing=false; last=null; }
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  window.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('touchstart', startDraw, {passive:false});
+  canvas.addEventListener('touchmove', moveDraw, {passive:false});
+  window.addEventListener('touchend', endDraw, {passive:false});
+  document.getElementById('btnWorkClearTop').addEventListener('click', ()=>{
+    const r = canvas.getBoundingClientRect();
+    ctx.clearRect(0,0,r.width,r.height);
+  });
+  window.addEventListener('resize', resizeCanvas);
+  setTimeout(()=>{ resizeCanvas(); fitToViewport(); resizeConfetti(); }, 50);
+
+  state = makeVariation();
+  renderVariant();
+})();
+</script>
+</body>
+</html>
