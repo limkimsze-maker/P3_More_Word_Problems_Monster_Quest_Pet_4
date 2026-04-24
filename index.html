@@ -851,17 +851,23 @@
   function money(cents){ return (cents/100).toFixed(2); }
   function noteText(cents){ return cents % 100 === 0 ? String(cents/100) : money(cents); }
   function parseMoney(v){
-    const s = String(v||'').trim().replace(/\$/g,'');
+    // Money answer boxes already show the $ sign outside the input.
+    // Pupils key in numbers only. Accepted examples: 10, 10.00, 10.50.
+    const s = String(v || '')
+      .trim()
+      .replace(/,/g, '')
+      .trim();
     if(!s) return NaN;
-    if(!/^\d+\.\d{2}$/.test(s)) return NaN;
-    return Math.round(parseFloat(s)*100);
+    if(!/^\d+(?:\.\d{2})?$/.test(s)) return NaN;
+    const parts = s.split('.');
+    const dollars = Number(parts[0]);
+    const cents = parts.length > 1 ? Number(parts[1]) : 0;
+    return (dollars * 100) + cents;
   }
 
   function parseNoteMoney(v){
-    const s = String(v||'').trim().replace(/\$/g,'');
-    if(!s) return NaN;
-    if(!/^\d+(?:\.00)?$/.test(s)) return NaN;
-    return Math.round(parseFloat(s)*100);
+    // Same convention for note fields: enter 10 or 10.00. The $ sign is already provided.
+    return parseMoney(v);
   }
 
   function setStylePx(el, styles){
