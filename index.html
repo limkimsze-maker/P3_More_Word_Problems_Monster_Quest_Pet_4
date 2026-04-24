@@ -851,17 +851,32 @@
   function money(cents){ return (cents/100).toFixed(2); }
   function noteText(cents){ return cents % 100 === 0 ? String(cents/100) : money(cents); }
   function parseMoney(v){
-    const s = String(v||'').trim().replace(/\$/g,'');
-    if(!s) return NaN;
-    if(!/^\d+\.\d{2}$/.test(s)) return NaN;
-    return Math.round(parseFloat(s)*100);
+    // Standard money input for all ordinary money boxes:
+    // Accept whole dollars OR dollars-and-cents with exactly 2 decimal places.
+    // Examples accepted: 10, 10.00, 4.90, 0.50
+    // Examples rejected: 4.9, 0.5, 10.0
+    // The visible $ sign is already on the page, but an accidental typed $ is tolerated.
+    let s = String(v || '').trim();
+    s = s.replace(/\s+/g, '');
+    s = s.replace(/^\$/, '');
+    if (!s) return NaN;
+
+    if (!/^\d+(?:\.\d{2})?$/.test(s)) return NaN;
+    return Math.round(Number(s) * 100);
   }
 
   function parseNoteMoney(v){
-    const s = String(v||'').trim().replace(/\$/g,'');
-    if(!s) return NaN;
-    if(!/^\d+(?:\.00)?$/.test(s)) return NaN;
-    return Math.round(parseFloat(s)*100);
+    // Note boxes follow the same convention:
+    // Accept whole dollars OR dollars-and-cents with exactly 2 decimal places.
+    // Examples accepted: 10, 10.00, 20, 20.00
+    // Examples rejected: 10.0, 10.50 for a $10/$20 note if it does not match the expected value.
+    let s = String(v || '').trim();
+    s = s.replace(/\s+/g, '');
+    s = s.replace(/^\$/, '');
+    if (!s) return NaN;
+
+    if (!/^\d+(?:\.\d{2})?$/.test(s)) return NaN;
+    return Math.round(Number(s) * 100);
   }
 
   function setStylePx(el, styles){
@@ -1205,5 +1220,7 @@ Part (ii): $${noteText(state.paid)} − $${money(state.total)} = $${money(state.
   renderVariant();
 })();
 </script>
+
+
 </body>
 </html>
