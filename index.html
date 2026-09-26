@@ -831,6 +831,341 @@
       }
     }
   </style>
+
+<script id="stage4-real-phone-detector">
+(function(){
+  function smallestViewport(){
+    const vals=[];
+    try{ if(window.innerWidth) vals.push(window.innerWidth); }catch(e){}
+    try{ if(document.documentElement.clientWidth) vals.push(document.documentElement.clientWidth); }catch(e){}
+    try{ if(window.visualViewport && window.visualViewport.width) vals.push(window.visualViewport.width); }catch(e){}
+    try{ if(window.top && window.top.innerWidth) vals.push(window.top.innerWidth); }catch(e){}
+    try{ if(window.screen && window.screen.width) vals.push(window.screen.width); }catch(e){}
+    return vals.length ? Math.min.apply(null, vals) : 9999;
+  }
+
+  function applyStage4PhoneMode(){
+    document.documentElement.classList.toggle('mq-stage4-phone', smallestViewport() <= 1100);
+  }
+
+  applyStage4PhoneMode();
+  window.addEventListener('resize', applyStage4PhoneMode);
+  window.addEventListener('orientationchange', applyStage4PhoneMode);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', applyStage4PhoneMode);
+  }
+  try{
+    if(window.top && window.top !== window){
+      window.top.addEventListener('resize', applyStage4PhoneMode);
+    }
+  }catch(e){}
+})();
+</script>
+
+<style id="stage4-match-stage1-mobile-layout">
+  /* Quest 4: on real phones, use the same single-column reading flow as Quest 1. */
+  html.mq-stage4-phone,
+  html.mq-stage4-phone body{
+    height:auto !important;
+    min-height:100% !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  html.mq-stage4-phone body{
+    padding-bottom:calc(120px + env(safe-area-inset-bottom)) !important;
+    touch-action:pan-y !important;
+  }
+
+  html.mq-stage4-phone .app{
+    width:100% !important;
+    height:auto !important;
+    min-height:100dvh !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  html.mq-stage4-phone .main{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto !important;
+    gap:12px !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-height:0 !important;
+    padding:8px !important;
+    overflow:visible !important;
+  }
+
+  html.mq-stage4-phone .main > .card,
+  html.mq-stage4-phone #toolsCard{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+    grid-column:1 !important;
+  }
+
+  /* Remove the fixed 1220px desktop scale-to-fit frame on phones. */
+  html.mq-stage4-phone .leftBd{
+    flex:none !important;
+    position:relative !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:8px !important;
+    overflow:visible !important;
+  }
+
+  html.mq-stage4-phone .fitViewport{
+    position:relative !important;
+    inset:auto !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+
+  html.mq-stage4-phone .fitStage{
+    position:relative !important;
+    left:0 !important;
+    top:0 !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    transform:none !important;
+    transform-origin:top left !important;
+  }
+
+  html.mq-stage4-phone .questionShell{
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:8px !important;
+    overflow:visible !important;
+    border-radius:22px !important;
+  }
+
+  /* Keep the Stage 4 pet completely hidden until all 3 questions are completed. */
+  html.mq-stage4-phone .rewardPage{
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:8px !important;
+    overflow:visible !important;
+    border-radius:22px !important;
+  }
+  html.mq-stage4-phone .rewardPage[hidden]{
+    display:none !important;
+  }
+  html.mq-stage4-phone .rewardPage:not([hidden]).show{
+    display:flex !important;
+  }
+
+  html.mq-stage4-phone .boardGrid{
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+  }
+
+  html.mq-stage4-phone .introPanel,
+  html.mq-stage4-phone .mainPanel{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:0 0 12px !important;
+    padding:12px !important;
+    overflow:visible !important;
+    position:relative !important;
+  }
+
+  html.mq-stage4-phone .middleFrame{
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:10px !important;
+    overflow:visible !important;
+  }
+
+  html.mq-stage4-phone .mainInner{
+    display:flex !important;
+    flex-direction:column !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    gap:16px !important;
+  }
+
+  html.mq-stage4-phone .leftSolve,
+  html.mq-stage4-phone .rightSolve{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+  }
+
+  html.mq-stage4-phone .rightSolve{
+    padding:12px !important;
+  }
+
+  html.mq-stage4-phone .questionTitleBox,
+  html.mq-stage4-phone .missionBottom{
+    flex-wrap:wrap !important;
+  }
+
+  html.mq-stage4-phone .problemText{
+    font-size:18px !important;
+    line-height:1.35 !important;
+  }
+
+  html.mq-stage4-phone .partHeader{
+    font-size:24px !important;
+  }
+
+  /* Preserve the teaching geometry of each bar model, but scale only the model. */
+  html.mq-stage4-phone .modelWrap{
+    width:610px !important;
+    max-width:none !important;
+    transform:scale(.57) !important;
+    transform-origin:top left !important;
+    overflow:visible !important;
+  }
+  html.mq-stage4-phone .model1{
+    height:190px !important;
+    margin-bottom:-82px !important;
+  }
+  html.mq-stage4-phone .model2{
+    height:150px !important;
+    margin-bottom:-64px !important;
+  }
+
+  /* Keep equations on one straight line as far as possible on a phone. */
+  html.mq-stage4-phone .eqBox,
+  html.mq-stage4-phone .rightSolve .eqBox{
+    width:100% !important;
+    max-width:100% !important;
+    flex-wrap:nowrap !important;
+    justify-content:center !important;
+    gap:4px !important;
+    padding:10px 6px !important;
+    font-size:17px !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  html.mq-stage4-phone .eqBox .moneyField{
+    flex:0 0 auto !important;
+    gap:2px !important;
+  }
+
+  html.mq-stage4-phone .eqBox .moneyField .dollar,
+  html.mq-stage4-phone .rightSolve .eqBox .moneyField .dollar{
+    min-width:10px !important;
+    font-size:17px !important;
+  }
+
+  html.mq-stage4-phone .eqBox .blankInput,
+  html.mq-stage4-phone .rightSolve .eqBox .blankInput{
+    width:58px !important;
+    height:38px !important;
+    padding:0 3px !important;
+    font-size:16px !important;
+  }
+
+  html.mq-stage4-phone .eqBox .blankInput.long,
+  html.mq-stage4-phone .rightSolve .eqBox .blankInput.long{
+    width:72px !important;
+  }
+
+  html.mq-stage4-phone .eqBox .opSlot{
+    width:34px !important;
+    height:34px !important;
+    flex:0 0 34px !important;
+    font-size:18px !important;
+  }
+
+  html.mq-stage4-phone .sentence,
+  html.mq-stage4-phone .rightSolve .sentence,
+  html.mq-stage4-phone .rightSolvePrompt{
+    font-size:20px !important;
+    line-height:1.35 !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  html.mq-stage4-phone .controlsFrame{
+    display:block !important;
+    width:100% !important;
+    min-height:0 !important;
+    margin:8px 0 0 !important;
+    position:relative !important;
+  }
+
+  html.mq-stage4-phone .controlsFrameInner{
+    width:100% !important;
+    padding:10px !important;
+    flex-wrap:wrap !important;
+  }
+
+  /* Working Space follows the question at full width. */
+  html.mq-stage4-phone #toolsCard{
+    min-height:520px !important;
+    margin:0 0 calc(70px + env(safe-area-inset-bottom)) !important;
+  }
+
+  html.mq-stage4-phone #workPanelBd{
+    height:auto !important;
+    min-height:440px !important;
+    overflow:visible !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
+
+  html.mq-stage4-phone .workCard{
+    flex:0 0 auto !important;
+    min-height:430px !important;
+    height:auto !important;
+  }
+
+  html.mq-stage4-phone .workCanvasWrap{
+    flex:0 0 auto !important;
+    min-height:340px !important;
+    height:340px !important;
+  }
+
+  html.mq-stage4-phone #workCanvas{
+    width:100% !important;
+    height:340px !important;
+    min-height:340px !important;
+    display:block !important;
+    pointer-events:auto !important;
+    touch-action:none !important;
+  }
+
+  html.mq-stage4-phone .workFeedbackFrame{
+    flex:0 0 auto !important;
+    min-height:150px !important;
+  }
+
+  html.mq-stage4-phone .footer{
+    width:100% !important;
+    flex-wrap:wrap !important;
+    margin-bottom:calc(24px + env(safe-area-inset-bottom)) !important;
+  }
+
+  html.mq-stage4-phone .back-main-btn{
+    bottom:calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+</style>
+
 </head>
 <body>
 <a class="back-main-btn"
@@ -1119,6 +1454,8 @@
   let actionMode = 'check';
 
   function clearWorking(){
+    drawing = false;
+    last = null;
     const r = canvas.getBoundingClientRect();
     ctx.clearRect(0,0,r.width,r.height);
   }
@@ -1379,6 +1716,14 @@
     const stage = els.fitStage;
     const shell = (!els.rewardPage.hidden && els.rewardPage.classList.contains('show')) ? els.rewardPage : els.questionShell;
     if(!vp || !stage || !shell) return;
+
+    if(document.documentElement.classList.contains('mq-stage4-phone')){
+      stage.style.transform = 'none';
+      stage.style.left = '0px';
+      stage.style.top = '0px';
+      return;
+    }
+
     const vw = vp.clientWidth;
     const vh = vp.clientHeight;
     const sw = shell.offsetWidth;
@@ -1567,10 +1912,7 @@ Part (ii): $${noteText(state.paid)} − $${money(state.total)} = $${money(state.
   canvas.addEventListener('touchstart', startDraw, {passive:false});
   canvas.addEventListener('touchmove', moveDraw, {passive:false});
   window.addEventListener('touchend', endDraw, {passive:false});
-  document.getElementById('btnWorkClearTop').addEventListener('click', ()=>{
-    const r = canvas.getBoundingClientRect();
-    ctx.clearRect(0,0,r.width,r.height);
-  });
+  document.getElementById('btnWorkClearTop').addEventListener('click', clearWorking);
   window.addEventListener('resize', resizeCanvas);
   setTimeout(()=>{ resizeCanvas(); fitToViewport(); resizeConfetti(); }, 50);
 
